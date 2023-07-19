@@ -135,7 +135,13 @@ const Search = function ({ setData, setIsLoading, setError }) {
 
   return (
     <div className="input-container">
-      <input type="text" value={inputVal} onChange={handleInput} ref={value} />
+      <input
+        type="text"
+        placeholder="search"
+        value={inputVal}
+        onChange={handleInput}
+        ref={value}
+      />
       <span className={`search-icon `} onClick={handleSubmit}>
         <SearchIcon />
       </span>
