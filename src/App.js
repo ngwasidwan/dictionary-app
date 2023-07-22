@@ -98,39 +98,44 @@ const Search = function ({ setData, setIsLoading, setError }) {
     setInputVal(e.target.value);
   };
 
-  const handleSubmit = function () {
-    if (!inputVal) return;
+  const fetchWord = async function () {
+    setIsLoading(true);
+    setError("");
 
-    const fetchWord = async function () {
-      setIsLoading(true);
-      setError("");
+    try {
+      const res = await fetch(
+        `https://api.dictionaryapi.dev/api/v2/entries/en/${inputVal}`
+      );
 
-      try {
-        const res = await fetch(
-          `https://api.dictionaryapi.dev/api/v2/entries/en/${inputVal}`
+      if (!res.ok)
+        throw new Error(
+          "Sorry pal, we couldn't find the definition of your searched term. You might have a typo"
         );
 
-        if (!res.ok)
-          throw new Error(
-            "Sorry pal, we couldn't find the definition of your searched term. You might have a typo"
-          );
+      const data = await res.json();
 
-        const data = await res.json();
+      setData(data);
+    } catch (err) {
+      setError(err.message);
+      setData([]);
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
-        setData(data);
-      } catch (err) {
-        setError(err.message);
-
-        setData([]);
-      } finally {
-        setIsLoading(false);
-      }
-    };
+  const handleSubmit = function () {
+    if (!inputVal) return;
     fetchWord();
   };
 
-  document.addEventListener("keydown", function (e) {
-    if (e.code === "Enter") handleSubmit();
+  useEffect(() => {
+    const onEnterKey = function (e) {
+      if (e.key === "Enter") handleSubmit();
+    };
+
+    document.addEventListener("keydown", onEnterKey);
+
+    return () => document.removeEventListener("keydown", onEnterKey);
   });
 
   return (
@@ -161,12 +166,16 @@ const LoadingMessage = function () {
 ///////////
 
 const ErrorMessage = function ({ error }) {
-  console.log(error);
-
   return <p className="error">{error}</p>;
 };
 
+/////
+// AUDIO STATS
+/////////
+
 const SearchedWordInfo = function ({ data, darkMode }) {
+  const [audioState, setAudioState] = useState(true);
+
   if (data.length < 1) return;
 
   const { word, meanings, sourceUrls, phonetic, phonetics } = data.at(0);
@@ -178,7 +187,11 @@ const SearchedWordInfo = function ({ data, darkMode }) {
   const audioEl = new Audio(audioUrl);
 
   const handleMicClick = () => {
-    audioEl.play();
+    audioUrl ? audioEl.play() : setAudioState(false);
+
+    setTimeout(() => {
+      setAudioState(true);
+    }, 2000);
   };
 
   return (
@@ -188,7 +201,7 @@ const SearchedWordInfo = function ({ data, darkMode }) {
           <h2>{word}</h2>
           <p className="phonetic-text">{phonetic}</p>
         </div>
-
+        {!audioState && <AudioStateMessage audioState={audioState} />}
         <AudioIcon onClick={handleMicClick} />
       </div>
 
@@ -246,5 +259,13 @@ const SearchedWordInfo = function ({ data, darkMode }) {
         Sources <a href={sourceUrls[0]}>{sourceUrls[0]}</a>
       </p>
     </>
+  );
+};
+
+const AudioStateMessage = function ({ audioState }) {
+  return (
+    <p className={`audio-state-message ${audioState ? "hidden" : ""}`}>
+      no audio for searched word
+    </p>
   );
 };

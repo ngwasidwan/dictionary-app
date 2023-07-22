@@ -187,3 +187,11 @@ a:visited {
   margin: 25px;
   text-align: center;
 }
+.audio-state-message {
+  margin-left: 60%;
+  font-size: 8px;
+}
+
+.hidden {
+  display: none;
+}
